@@ -1,4 +1,3 @@
-
 #pragma once
 
 #define LCD_MOSI 39

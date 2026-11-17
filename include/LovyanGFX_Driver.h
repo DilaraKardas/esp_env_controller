@@ -1,6 +1,4 @@
-
 #pragma once
-
 #include <LovyanGFX.hpp>
 #include "pins_config.h"
 
