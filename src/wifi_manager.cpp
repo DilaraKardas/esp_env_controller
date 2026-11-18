@@ -5,7 +5,6 @@
 
 static Preferences preferences;
 
-// Global paylaşılan değişkenler (static kaldırıldı)
 String pendingSSID = "";
 String pendingPassword = "";
 bool connectionInProgress = false;
@@ -37,14 +36,14 @@ void initializeWiFi() {
 }
 
 void handleWiFiLoop() {
-    // NTP Senkronizasyonu
+    // NTP sencronization
     if (WiFi.status() == WL_CONNECTED && !ntpConfigured) {
         configTzTime("TRT-3", "pool.ntp.org", "time.nist.gov");
         ntpConfigured = true;
         Serial.println("NTP synchronization started.");
     }
 
-    // Bağlantı başarılı olursa kaydet
+    // save the process if connection success
     if (connectionInProgress && WiFi.status() == WL_CONNECTED) {
         connectionInProgress = false;
         Serial.println("\nWiFi connected successfully!");
@@ -56,7 +55,7 @@ void handleWiFiLoop() {
         Serial.println("Credentials saved!");
     }
 
-    // Zaman aşımı kontrolü
+    // time expire controller
     if (connectionInProgress && millis() - connectionStartTime > CONNECTION_TIMEOUT) {
         connectionInProgress = false;
         Serial.println("\nERROR: WiFi connection timeout!");

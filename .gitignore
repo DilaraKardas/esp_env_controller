@@ -1,5 +1,18 @@
-.pio
-.vscode/.browse.c_cpp.db*
-.vscode/c_cpp_properties.json
-.vscode/launch.json
-.vscode/ipch
+# PlatformIO settings
+.pio/
+.build/
+build/
+bin/
+libdeps/
+
+# VS Code settings
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# Other files and folders
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini

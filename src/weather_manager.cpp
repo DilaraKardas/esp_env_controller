@@ -4,44 +4,87 @@
 #include <ArduinoJson.h>
 #include <WiFiClientSecure.h>
 
-// Dışarıdan erişilebilecek global değişkenler
 float currentWeatherTemperature = 0.0f;
 float currentWeatherHumidity = 0.0f;
 
+String currentCity = "Bursa";
+float currentLatitude = 40.1828f;
+float currentLongitude = 29.0665f;
+
+bool fetchLocationFromIP(){
+    if (WiFi.status() != WL_CONNECTED) {
+        Serial.println("WiFi is not connected. Cannot fetch location data.");
+        return false;
+    }
+    HTTPClient http;
+    http.begin("http://ip-api.com/json/");
+    int httpResponseCode = http.GET();
+
+    if (httpResponseCode > 0) {
+        String payload = http.getString();
+        JsonDocument doc;
+        DeserializationError error = deserializeJson(doc, payload);
+
+        if (!error && doc["status"] == "success") {
+            currentLatitude = doc["lat"];
+            currentLongitude = doc["lon"];
+            
+            Serial.print("Dynamic Position taken -> Latitude: ");
+            Serial.print(currentLatitude);
+            Serial.print(", Longitude: ");
+            Serial.println(currentLongitude);
+            http.end();
+            return true;
+        } else {
+            Serial.println("Location data JSON parse error!!");
+        }
+    } else {
+        Serial.print("Location HTTP error code: ");
+        Serial.println(httpResponseCode);
+    }
+
+    http.end();
+    return false;
+}
+
 void fetchWeatherData() {
     if (WiFi.status() != WL_CONNECTED) {
-        Serial.println("WiFi bağlı değil, hava durumu alınamadı.");
+        Serial.println("WiFi is not connected. Cannot fetch weather data.");
         return;
     }
 
-    WiFiClientSecure client;
-    client.setInsecure();   // sertifika doğrulamasını atlar
+    if (!fetchLocationFromIP()) {
+        Serial.println("location cannot fetch, the last known coordinates will be used");
+    }
 
     HTTPClient http;
-    http.begin(client, "https://api.open-meteo.com/v1/forecast?latitude=40.1828&longitude=29.0665&current=temperature_2m,relative_humidity_2m");
+    String url = "http://api.open-meteo.com/v1/forecast?latitude=" + String(currentLatitude, 4) + 
+                 "&longitude=" + String(currentLongitude, 4) + 
+                 "&current=temperature_2m,relative_humidity_2m";
 
+    http.begin(url);
     int httpResponseCode = http.GET();
 
-    if (httpResponseCode == HTTP_CODE_OK) {
+    if (httpResponseCode > 0) {
         String payload = http.getString();
-        Serial.println("Hava durumu verisi alındı.");
+        Serial.println("Dynamic weather data has been successfully retrieved");
 
-        JsonDocument doc;
+        JsonDocument doc; 
         DeserializationError error = deserializeJson(doc, payload);
 
         if (!error) {
             currentWeatherTemperature = doc["current"]["temperature_2m"];
             currentWeatherHumidity = doc["current"]["relative_humidity_2m"];
-
-            Serial.print("Dış Hava Sıcaklığı: ");
+            
+            Serial.print("Current outdoor temperature: ");
             Serial.print(currentWeatherTemperature);
             Serial.println(" °C");
         } else {
-            Serial.print("JSON parse hatası: ");
-            Serial.println(error.c_str());
+            Serial.println("Weather data JSON parse error!");
         }
     } else {
-        Serial.printf("HTTP Hata kodu: %d\n", httpResponseCode);
+        Serial.print("Weather HTTP error code: ");
+        Serial.println(httpResponseCode);
     }
 
     http.end();
